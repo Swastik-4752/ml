@@ -1,0 +1,13 @@
+# number | title | file name it is saved as
+1 | Data preprocessing - clean, normalize, encode (needs CSV) | ml1_preprocessing.txt
+2.1 | Simple linear regression - salary (needs CSV) | ml2.1_linear_regression.txt
+2.2 | Multiple linear regression - advertising (needs CSV) | ml2.2_multiple_regression.txt
+3 | Decision tree classification - breast cancer | ml3_decision_tree.txt
+4 | KNN with PCA - breast cancer | ml4_knn_pca.txt
+5 | Collaborative filtering - movie recommender (needs CSV) | ml5_collaborative_filtering.txt
+6.1 | Naive Bayes - spam email classifier | ml6.1_naive_bayes.txt
+6.2 | Logistic regression (SGD) - adult income (needs CSV) | ml6.2_logistic_regression.txt
+7 | SVM - linear, polynomial and RBF kernels | ml7_svm.txt
+8 | Perceptron (MLP neural network) - adult income (needs CSV) | ml8_perceptron.txt
+9 | Digit classification - MNIST with Keras | ml9_digit_classification.txt
+10 | K-Means clustering - iris | ml10_kmeans.txt

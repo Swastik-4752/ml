@@ -1,0 +1,53 @@
+# ===== Practical 5 - Collaborative filtering (movie recommender) =====
+
+# ----- recommender.py -----
+import pandas as pd
+from sklearn.metrics.pairwise import cosine_similarity
+
+movies = pd.read_csv("movies.csv")
+ratings = pd.read_csv("ratings.csv")
+df = ratings.merge(movies, on="movieId", how="inner")
+print(df.head())
+
+# User x movie rating matrix (NaN = not rated)
+rating_matrix = df.pivot_table(index="userId", columns="title", values="rating")
+print(rating_matrix.head(10))
+
+# How similar each pair of users is (cosine similarity)
+similarity = cosine_similarity(rating_matrix.fillna(0))
+similarity_df = pd.DataFrame(similarity, index=rating_matrix.index, columns=rating_matrix.index)
+print("User similarity:\n", similarity_df.iloc[:5, :5].round(2))
+
+def recommend_movies(target_user, top_n=10, k=20):
+    # 1. Top k most similar users
+    similar_users = similarity_df.loc[target_user].drop(target_user).nlargest(k)
+    # 2. Movies the target user has not rated
+    candidate_movies = rating_matrix.columns[rating_matrix.loc[target_user].isna()]
+    # 3. Predicted rating = similarity-weighted average of similar users' ratings
+    predictions = {}
+    for movie in candidate_movies:
+        numerator = 0
+        denominator = 0
+        for user in similar_users.index:
+            rating = rating_matrix.loc[user, movie]
+            sim = similarity_df.loc[target_user, user]
+            if pd.notna(rating) and sim > 0:
+                numerator += sim * rating
+                denominator += sim
+        if denominator > 0:
+            predictions[movie] = numerator / denominator
+    # 4. Best top_n movies, with their genres
+    top_movies = sorted(predictions.items(), key=lambda x: x[1], reverse=True)[:top_n]
+    result = pd.DataFrame(top_movies, columns=["title", "PredictedRating"])
+    genres = df[["title", "genres"]].drop_duplicates(subset="title")
+    return result.merge(genres, on="title", how="left")[["title", "genres", "PredictedRating"]]
+
+print("Recommended movies for user 4:")
+print(recommend_movies(target_user=4, top_n=10, k=20))
+
+# ----- Commands -----
+pip install pandas scikit-learn
+# put movies.csv (from your teacher) in this folder first
+# put ratings.csv (from your teacher) in this folder first
+# create recommender.py, then:
+python recommender.py      # takes about a minute

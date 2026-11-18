@@ -1,0 +1,47 @@
+# ===== Practical 6.1 - Naive Bayes spam classifier =====
+
+# ----- naive_bayes.py -----
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score
+
+data = {
+    "email": [
+        "Win a free iPhone now", "Congratulations you won a lottery", "Claim your free prize today",
+        "Get free money now", "Limited offer buy now", "You have won a cash prize",
+        "Meeting scheduled for tomorrow", "Please submit your assignment", "Let us meet for lunch",
+        "Project discussion at 10 AM", "Please find the attached report", "Your class starts at 9 AM",
+        "Can we schedule a meeting", "Please call me when you are free", "Your payment receipt is attached",
+        "Free gift waiting for you", "Earn money from home", "Click here to claim your reward"],
+    "label": ["spam"] * 6 + ["not spam"] * 9 + ["spam"] * 3,
+}
+df = pd.DataFrame(data)
+print(df)
+
+X_train, X_test, y_train, y_test = train_test_split(df["email"], df["label"], test_size=0.25, random_state=42)
+print("Training samples:", len(X_train), " Testing samples:", len(X_test))
+
+vectorizer = CountVectorizer()                 # Bag of Words: count of each word
+X_train_counts = vectorizer.fit_transform(X_train)
+X_test_counts = vectorizer.transform(X_test)
+print("Vocabulary:", vectorizer.get_feature_names_out())
+
+model = MultinomialNB()
+model.fit(X_train_counts, y_train)
+
+y_pred = model.predict(X_test_counts)
+print(pd.DataFrame({"Email": X_test, "Actual": y_test, "Predicted": y_pred}))
+print("Accuracy:", accuracy_score(y_test, y_pred) * 100)
+
+new_email = ["Congratulations! You have won a free gift"]
+print("Email:", new_email[0])
+print("Prediction:", model.predict(vectorizer.transform(new_email))[0].upper())
+
+# ----- Commands -----
+pip install pandas scikit-learn
+mkdir ml_practical6.1
+cd ml_practical6.1
+# create naive_bayes.py, then:
+python naive_bayes.py

@@ -1,0 +1,43 @@
+# ===== Practical 2.1 - Simple linear regression =====
+
+# ----- linear_regression.py -----
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+df = pd.read_csv("Salary_dataset.csv")
+print(df.head(10))
+
+plt.scatter(df["YearsExperience"], df["Salary"])
+plt.xlabel("YearsExperience")
+plt.ylabel("Salary")
+plt.show()
+
+x = df[["YearsExperience"]]
+y = df[["Salary"]]
+X_train, X_test, Y_train, Y_test = train_test_split(x, y, test_size=0.2)
+
+lr = LinearRegression()
+lr.fit(X_train, Y_train)
+print("coefficient", lr.coef_)
+print("intercept", lr.intercept_)
+
+predicted_salary = lr.predict(X_test)
+print("predicted:", predicted_salary.ravel())
+print("actual:   ", np.array(Y_test).ravel())
+print("mean squared error", mean_squared_error(Y_test, predicted_salary))
+
+plt.scatter(df["YearsExperience"], df["Salary"])
+plt.plot(X_test, predicted_salary, color="red")
+plt.xlabel("YearsExperience")
+plt.ylabel("Salary")
+plt.show()
+
+# ----- Commands -----
+pip install numpy pandas matplotlib scikit-learn
+# put Salary_dataset.csv (from your teacher) in this folder first
+# create linear_regression.py, then:
+python linear_regression.py      # close each graph window to continue

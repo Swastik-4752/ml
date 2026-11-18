@@ -1,0 +1,42 @@
+# ===== Practical 4 - KNN with PCA =====
+
+# ----- knn_pca.py -----
+import pandas as pd
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+
+cancer = load_breast_cancer()
+df = pd.DataFrame(cancer.data, columns=cancer.feature_names)
+df["target"] = cancer.target
+print(df.head())
+print("Shape:", df.shape)
+
+X = df.drop("target", axis=1)
+y = df["target"]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Standardize, then reduce 30 features to 2 with PCA
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+pca = PCA(n_components=2)
+X_train_pca = pca.fit_transform(X_train)
+X_test_pca = pca.transform(X_test)
+
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train_pca, y_train)
+y_pred = knn.predict(X_test_pca)
+
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Variance captured (%):", sum(pca.explained_variance_ratio_) * 100)
+
+# ----- Commands -----
+pip install pandas scikit-learn
+mkdir ml_practical4
+cd ml_practical4
+# create knn_pca.py, then:
+python knn_pca.py

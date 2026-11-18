@@ -1,0 +1,74 @@
+# ===== Practical 1 - Data preprocessing =====
+
+# ----- preprocessing.py -----
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+
+df = pd.read_csv("indian_travel_dataset_500_rows.csv")
+print("Shape:", df.shape)
+print(df.head())
+df.info()
+print("Missing values:\n", df.isnull().sum())
+
+# 1. Clean: drop empty rows, fix text, numbers and dates
+df = df.dropna(how="all").copy()
+text_columns = ["Indian_State", "Accommodation_Type", "Transport_Type"]
+for col in text_columns:
+    df[col] = df[col].astype("string").str.strip().str.title()
+df["Indian_State"] = df["Indian_State"].replace({
+    "Maha Rashtra": "Maharashtra", "Up": "Uttar Pradesh",
+    "Tamilnadu": "Tamil Nadu", "West-Bengal": "West Bengal"})
+df["Duration_Days"] = pd.to_numeric(
+    df["Duration_Days"].astype(str).str.replace(r"(?i)\s*days?\s*", "", regex=True), errors="coerce")
+for col in ["Accommodation_Cost_INR", "Transport_Cost_INR"]:
+    df[col] = pd.to_numeric(
+        df[col].astype(str).str.replace(r"(?i)[,\s]|rupees|inr|usd", "", regex=True), errors="coerce")
+df["Travel_Date"] = pd.to_datetime(df["Travel_Date"], format="mixed", errors="coerce")
+
+# 2. Fill missing values: median for numbers, mode for text
+numeric_columns = ["Duration_Days", "Accommodation_Cost_INR", "Transport_Cost_INR"]
+for col in numeric_columns:
+    df[col] = df[col].fillna(df[col].median())
+for col in text_columns:
+    df[col] = df[col].fillna(df[col].mode()[0])
+print("Missing values after cleaning:\n", df.isnull().sum())
+
+# 3. NumPy statistics
+duration = df["Duration_Days"].to_numpy()
+print("Mean duration:", np.mean(duration))
+print("Median duration:", np.median(duration))
+print("Min / Max:", np.min(duration), np.max(duration))
+print("Standard deviation:", np.std(duration))
+total_cost = df["Accommodation_Cost_INR"].to_numpy() + df["Transport_Cost_INR"].to_numpy()
+print("Average total travel cost:", round(np.mean(total_cost), 2))
+
+# 4. Normalize numbers (0 to 1) and one-hot encode the state
+df[numeric_columns] = MinMaxScaler().fit_transform(df[numeric_columns])
+print(df[numeric_columns].head())
+encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+states = pd.DataFrame(encoder.fit_transform(df[["Indian_State"]]),
+                      columns=encoder.get_feature_names_out(), index=df.index)
+print(states.head())
+
+# 5. Graphs
+state_cost = df.groupby("Indian_State")["Accommodation_Cost_INR"].mean().sort_values(ascending=False).head(10)
+plt.figure(figsize=(10, 5))
+plt.bar(state_cost.index, state_cost.values)
+plt.title("Top 10 States by Average Normalized Accommodation Cost")
+plt.xticks(rotation=45, ha="right")
+plt.tight_layout()
+plt.show()
+
+plt.scatter(df["Transport_Cost_INR"], df["Accommodation_Cost_INR"])
+plt.title("Normalized Transport Cost vs Accommodation Cost")
+plt.xlabel("Transport Cost")
+plt.ylabel("Accommodation Cost")
+plt.show()
+
+# ----- Commands -----
+pip install numpy pandas matplotlib scikit-learn
+# put indian_travel_dataset_500_rows.csv (from your teacher) in this folder first
+# create preprocessing.py, then:
+python preprocessing.py      # close each graph window to continue

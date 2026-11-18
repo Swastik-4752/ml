@@ -1,0 +1,38 @@
+# ===== Practical 3 - Decision tree classification =====
+
+# ----- decision_tree.py -----
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+
+df = pd.read_csv("data_DT.csv")
+print(df.head(10))
+print("Shape:", df.shape)
+print("Class distribution:\n", df["diagnosis"].value_counts())
+
+X = df.drop(columns=["id", "diagnosis"])      # id and diagnosis are not inputs
+le = LabelEncoder()
+Y = le.fit_transform(df["diagnosis"])          # model needs numbers: B -> 0, M -> 1
+
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+
+dt = DecisionTreeClassifier(criterion="entropy")
+dt.fit(X_train, Y_train)
+
+test_pred = dt.predict(X_test)
+print(pd.DataFrame({"actual": Y_test, "pred": test_pred}).head(10))
+print("Test accuracy:", accuracy_score(Y_test, test_pred))
+
+sample = X_test[5:6]                           # one row from the test set
+print("Actual:", le.inverse_transform(Y_test[5:6]))
+print("Pred:  ", le.inverse_transform(dt.predict(sample)))
+
+# ----- Commands -----
+pip install pandas scikit-learn
+mkdir ml_practical3
+cd ml_practical3
+curl -fsSLO https://swastik-4752.github.io/ml/data/data_DT.csv
+# create decision_tree.py, then:
+python decision_tree.py

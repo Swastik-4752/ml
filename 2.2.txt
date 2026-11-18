@@ -1,0 +1,38 @@
+# ===== Practical 2.2 - Multiple linear regression =====
+
+# ----- multiple_regression.py -----
+import pandas as pd
+import plotly.express as px
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+
+df = pd.read_csv("Advertising.csv")
+print(df.head(10))
+
+fig = px.scatter_3d(df, x="TV", y="Radio", z="Sales")
+fig.show()      # opens in the browser
+
+X = df[["TV", "Radio", "Newspaper"]]
+Y = df["Sales"]
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=32)
+print(X_train.shape, X_test.shape, Y_train.shape, Y_test.shape)
+
+lr = LinearRegression()
+lr.fit(X_train, Y_train)
+print("coefficients", lr.coef_)
+print("intercept", lr.intercept_)
+
+prediction = lr.predict(X_test)
+print(pd.DataFrame({"Actual": Y_test.values, "Predicted": prediction}))
+print("Mean Squared Error:", mean_squared_error(Y_test, prediction))
+print("Mean Absolute Error:", mean_absolute_error(Y_test, prediction))
+
+sample = pd.DataFrame([[123, 20, 20]], columns=["TV", "Radio", "Newspaper"])
+print("Predicted sales for TV=123, Radio=20, Newspaper=20:", lr.predict(sample))
+
+# ----- Commands -----
+pip install pandas plotly scikit-learn
+# put Advertising.csv (from your teacher) in this folder first
+# create multiple_regression.py, then:
+python multiple_regression.py

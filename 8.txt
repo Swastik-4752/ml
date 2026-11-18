@@ -1,0 +1,57 @@
+# ===== Practical 8 - Perceptron (MLP neural network, adult income) =====
+
+# ----- perceptron.py -----
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score, log_loss, confusion_matrix, classification_report
+
+df = pd.read_csv("adult.csv")
+print(df.head())
+print(df["income"].value_counts())
+
+df = df.replace("?", np.nan).dropna()          # "?" means missing
+print("Rows left after removing missing:", df.shape)
+df["income"] = LabelEncoder().fit_transform(df["income"])    # <=50K -> 0, >50K -> 1
+
+X = df.drop("income", axis=1)
+y = df["income"]
+categorical_columns = X.select_dtypes(include="object").columns
+print("Categorical columns:", list(categorical_columns))
+for col in categorical_columns:
+    df[col].value_counts().plot(kind="bar", title=f"Distribution of {col}")
+    plt.show()
+
+X = pd.get_dummies(X, columns=categorical_columns, drop_first=True)
+print("Features after encoding:", X.shape[1])
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Multi-layer perceptron: 3 hidden layers (64, 32, 16), trained one epoch at a time
+model = MLPClassifier(hidden_layer_sizes=(64, 32, 16), activation="relu", solver="sgd",
+                      learning_rate_init=0.01, batch_size=256, max_iter=1, random_state=42)
+classes = np.unique(y_train)
+for epoch in range(1, 20):
+    model.partial_fit(X_train, y_train, classes=classes)
+    train_loss = log_loss(y_train, model.predict_proba(X_train), labels=classes)
+    train_acc = accuracy_score(y_train, model.predict(X_train))
+    val_pred = model.predict(X_test)
+    val_loss = log_loss(y_test, model.predict_proba(X_test), labels=classes)
+    val_acc = accuracy_score(y_test, val_pred)
+    print(f"Epoch {epoch:02d} | Train Loss: {train_loss:.4f} | Train Acc: {train_acc:.4f} | "
+          f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
+
+print("Training accuracy (%):", accuracy_score(y_train, model.predict(X_train)) * 100)
+print("Confusion matrix:\n", confusion_matrix(y_test, val_pred))
+print("Classification report:\n", classification_report(y_test, val_pred))
+
+# ----- Commands -----
+pip install numpy pandas matplotlib scikit-learn
+# put adult.csv (from your teacher) in this folder first
+# create perceptron.py, then:
+python perceptron.py      # close each graph window to continue
